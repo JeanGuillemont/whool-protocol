@@ -1,9 +1,9 @@
-# Slugs
+# Whool 
 **Inherits:**
 ERC721Enumerable, Ownable, Pausable
 
 **Author:**
-bernat.eth
+bernat.eth, forked and customized by JeanGuillemont
 
 This contract implements the Slugs protocol, which allows for the creation and management of unique slug NFTs that map to URLs.
 Each slug is associated with a unique URL.
