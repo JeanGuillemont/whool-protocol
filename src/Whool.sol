@@ -282,27 +282,6 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
             return svg;
         }
 
-        bytes memory logo = abi.encodePacked(
-            '<path d="M650 700 Q 700 750, 700 700 T 750 700" stroke="',
-            foreground,
-            '" fill="',
-            background,
-            '" stroke-width="20"/>'
-        );
-
-        bytes memory svg = abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" height="100%" width="100%">',
-            '<rect x="0" y="0" width="800" height="800" fill="',
-            background,
-            '" />',
-            text,
-            logo,
-            "</svg>"
-        );
-
-        return svg;
-    }
-
     ///////////// Owner methods /////////////
 
     function rescueERC20(address token) external onlyOwner {
