@@ -9,160 +9,132 @@ import "openzeppelin-contracts/utils/Base64.sol";
 import "openzeppelin-contracts/utils/Strings.sol";
 
 /**
- * @title Slugs
- * @author bernat.eth
- * @notice This contract implements the Slugs protocol, which allows for the creation and management of unique slug NFTs that map to URLs.
- * Each slug is associated with a unique URL.
- * Random slugs can be generated at no cost (other than gas fees), while custom slugs entail a mint fee.
- * The contract also includes functionality for referrers to earn a share of mint fees.
+ * @title Whool
+ * @author bernat.eth, forked and customized by JeanGuillemont
+ * @notice This contract implements the Whool protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
+ * Each whool is associated with a unique URL.
+ * Random whools can be generated at no cost (other than gas fees), while custom whools entail a mint fee.
  */
 
-contract Slugs is ERC721Enumerable, Ownable, Pausable {
-    struct SlugData {
-        string slug;
+contract Whool is ERC721Enumerable, Ownable, Pausable {
+    struct WhoolData {
+        string Whool;
         bool isCustom;
     }
 
     uint256 public idCounter;
-    uint256 public referrerFeeBips;
     mapping(string => string) public urls;
-    mapping(string => uint256) public slugToTokenId;
-    mapping(uint256 => SlugData) public tokenIdToSlugData;
+    mapping(string => uint256) public whoolToTokenId;
+    mapping(uint256 => WhoolData) public tokenIdToWhoolData;
     mapping(address => uint256) public balances;
 
-    event NewSlug(address indexed sender, string url, string slug, uint256 tokenId, bool isCustom, address referrer);
+    event NewWhool(address indexed sender, string url, string whool, uint256 tokenId, bool isCustom);
 
     bytes constant CHARSET = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // 58 chars
     uint256 constant MAX_FEE = 10000;
 
-    uint256[9] private PRICES = [0 ether, 1 ether, 0.5 ether, 0.25 ether, 0.1 ether, 0.05 ether, 0.03 ether, 0.02 ether, 0.01 ether];
-
     constructor()
         ERC721(
-            "Slugs", // Name of token
-            "SLUGS" // Symbol of token
+            "Whool", // Name of token
+            "WHOOL" // Symbol of token
         )
     {
         idCounter = 0;
-        referrerFeeBips = 50 * 100; // 50%
     }
 
     ///////////// Transactional methods /////////////
 
     /**
-     * @notice Mint a new slug.
-     * @dev Referrer is required but can be the zero address.
+     * @notice Mint a new whool.
      *
      * Requirements:
      * - `url` cannot be empty.
-     * - `slug` must not already exist.
-     * - `referrer` cannot be the sender.
+     * - `whool` must not already exist.
      *
-     * Random slugs are generated when slug is an empty string, and can be created at no cost.
-     * If a custom slug is provided, an ETH amount equal or greater to the mint fee needs to be provided. See getSlugCost for more details.
+     * Random whools are generated when whool is an empty string, and can be created at no cost.
+     * If a custom whool is provided, an ETH amount equal or greater to the mint fee needs to be provided. See getWhoolCost for more details.
      *
-     * Emits a {NewSlug} event.
+     * Emits a {NewWhool} event.
      *
-     * @param url The URL associated with the new slug.
-     * @param slug The custom slug to be created. If empty, a random slug is generated.
-     * @param referrer The address of the referrer. Can be the zero address.
-     * @return Returns the slug that was created.
+     * @param url The URL associated with the new whool.
+     * @param whool The custom whool to be created. If empty, a random whool is generated.
+     * @return Returns the whool that was created.
      */
-    function mintSlug(string memory url, string memory slug, address referrer)
+    function mintWhool(string memory url, string memory whool)
         public
         payable
         whenNotPaused
         returns (string memory)
     {
         require(bytes(url).length > 0, "URL cannot be empty");
-        require(bytes(urls[slug]).length == 0, "Slug already exists");
-        require(msg.sender != referrer, "Referrer cannot be sender");
+        require(bytes(urls[whool]).length == 0, "whool already exists");
 
         bool isCustom;
 
-        // If no custom slug provided, generate an available random one
-        if (bytes(slug).length == 0) {
-            slug = generateAvailableSlug();
+        // If no custom whool provided, generate an available random one
+        if (bytes(whool).length == 0) {
+            whool = generateAvailableWhool();
             isCustom = false;
-        // Custom slug
+        // Custom whool
         } else {
             isCustom = true;
-            handleCustomSlugPayment(slug, referrer);
+            handleCustomWhoolPayment(whool);
         }
 
-        // Register slug -> url mapping
-        _mintSlug(slug, url, isCustom);
+        // Register whool -> url mapping
+        _mintWhool(whool, url, isCustom);
 
-        emit NewSlug(msg.sender, url, slug, idCounter, isCustom, referrer);
+        emit NewWhool(msg.sender, url, whool, idCounter, isCustom);
 
-        return slug;
+        return whool;
     }
 
     /**
-     * @dev Edits the URL of a slug.
+     * @dev Edits the URL of a whool.
      *
      * Requirements:
      * - `tokenId` must be owned by the caller.
      * - `newUrl` cannot be empty.
      *
-     * @param tokenId The ID of the token (slug) to edit.
-     * @param newUrl The new URL to associate with the slug.
+     * @param tokenId The ID of the token (whool) to edit.
+     * @param newUrl The new URL to associate with the whool.
      */
     function editUrl(uint256 tokenId, string memory newUrl) public {
         require(ownerOf(tokenId) == msg.sender, "Caller is not owner nor approved");
         require(bytes(newUrl).length > 0, "URL cannot be empty");
 
-        string memory slug = tokenIdToSlugData[tokenId].slug;
-        urls[slug] = newUrl;
-    }
-
-    /**
-     * @dev Claims the ETH balance associated with the caller's address.
-     *
-     * Requirements:
-     * - The caller must have a non-zero balance.
-     *
-     * Emits a {Transfer} event.
-     */
-    function claimBalance() public {
-        uint256 balance = balances[msg.sender];
-        require(balance > 0, "No balance to claim");
-        balances[msg.sender] = 0;
-        payable(msg.sender).transfer(balance);
-    }
-
-    receive() external payable {
-        balances[owner()] += msg.value;
+        string memory whool = tokenIdToWhoolData[tokenId].whool;
+        urls[whool] = newUrl;
     }
 
     ///////////// Private methods /////////////
 
-    // Generate an available random slug
-    function generateAvailableSlug() private view returns (string memory) {
-        string memory slug = generateSlug(idCounter);
+    // Generate an available random whool
+    function generateAvailableWhool() private view returns (string memory) {
+        string memory whool = generateWhool(idCounter);
 
         // avoid collisions
-        while (bytes(urls[slug]).length != 0) {
-            slug = incrementSlug(slug);
+        while (bytes(urls[whool]).length != 0) {
+            whool = incrementWhool(whool);
         }
 
-        return slug;
+        return whool;
     }
 
-    // Generate a random slug
-    function generateSlug(uint256 seed) private pure returns (string memory) {
+    // Generate a random whool
+    function generateWhool(uint256 seed) private pure returns (string memory) {
         uint256 hash = uint256(keccak256(abi.encodePacked(seed)));
-        string memory slug = "";
+        string memory whool = "";
         for (uint8 i = 0; i < 8; i++) {
-            slug = string(abi.encodePacked(slug, CHARSET[hash % 58])); // charset is 58 chars long
+            whool = string(abi.encodePacked(whool, CHARSET[hash % 58])); // charset is 58 chars long
             hash = hash >> 6; // 2 ** 6 > 58 > 2 ** 5
         }
-        return slug;
+        return whool;
     }
 
-    // Given a slug, increment it by 1 character covering the entire combinatorial charset space
-    function incrementSlug(string memory slug) private pure returns (string memory) {
-        bytes memory b = bytes(slug);
+    // Given a whool, increment it by 1 character covering the entire combinatorial charset space
+    function incrementWhool(string memory whool) private pure returns (string memory) {
+        bytes memory b = bytes(whool);
         for (uint8 i = 7; i >= 0; i--) {
             if (b[i] != CHARSET[57]) {
                 b[i] = getNextChar(b[i]);
@@ -171,7 +143,7 @@ contract Slugs is ERC721Enumerable, Ownable, Pausable {
                 b[i] = CHARSET[0]; // Reset to the first character in the CHARSET
             }
         }
-        return "00000000";  // This will only be hit if all characters in the slug are the last character in CHARSET.
+        return "00000000";  // This will only be hit if all characters in the whool are the last character in CHARSET.
     }
 
     function getNextChar(bytes1 char) private pure returns (bytes1) {
@@ -184,74 +156,65 @@ contract Slugs is ERC721Enumerable, Ownable, Pausable {
         return char;
     }
 
-    function handleCustomSlugPayment(string memory slug, address referrer) private {
-        uint256 slugLength = bytes(slug).length;
-        uint256 cost = getSlugCost(slugLength);
+    function handleCustomWhoolPayment(string memory whool) private {
+        uint256 whoolLength = bytes(whool).length;
+        uint256 cost = getWhoolCost(whoolLength);
         require(msg.value >= cost, "Insufficient payment");
 
         if (msg.value > cost) {
             payable(msg.sender).transfer(msg.value - cost);
         }
 
-        if (referrer == address(0)) {
-            referrer = owner();
-        }
-
-        uint256 referrerFees = cost * referrerFeeBips / MAX_FEE;
-        balances[referrer] += referrerFees;
-        balances[owner()] += cost - referrerFees;
+        balances[owner()] += cost;
     }
 
-    function _mintSlug(string memory slug, string memory url, bool isCustom) private {
-        urls[slug] = url;
+    function _mintWhool(string memory whool, string memory url, bool isCustom) private {
+        urls[whool] = url;
         idCounter++;
         _mint(msg.sender, idCounter);
-        slugToTokenId[slug] = idCounter;
-        tokenIdToSlugData[idCounter] = SlugData(slug, isCustom);
+        whoolToTokenId[whool] = idCounter;
+        tokenIdToWhoolData[idCounter] = WhoolData(whool, isCustom);
     }
 
     ///////////// Public view methods /////////////
 
     /**
-     * @notice Fetches the token ID associated with a given slug.
-     * @dev This function requires that the slug is not empty and exists.
-     * @param slug The slug for which to fetch the token ID.
-     * @return Returns the token ID associated with the given slug.
+     * @notice Fetches the token ID associated with a given whool.
+     * @dev This function requires that the whool is not empty and exists.
+     * @param whool The whool for which to fetch the token ID.
+     * @return Returns the token ID associated with the given whool.
      */
-    function getTokenId(string memory slug) public view returns (uint256) {
-        require(bytes(slug).length > 0, "Slug cannot be empty");
-        require(bytes(urls[slug]).length > 0, "Slug does not exist");
-        return slugToTokenId[slug];
+    function getTokenId(string memory whool) public view returns (uint256) {
+        require(bytes(whool).length > 0, "Whool cannot be empty");
+        require(bytes(urls[whool]).length > 0, "Whool does not exist");
+        return whoolToTokenId[whool];
     }
 
     /**
-     * @notice Fetches the URL associated with a given slug.
-     * @dev This function requires that the slug is not empty and exists.
-     * @param slug The slug for which to fetch the URL.
-     * @return Returns the URL associated with the given slug.
+     * @notice Fetches the URL associated with a given whool.
+     * @dev This function requires that the whool is not empty and exists.
+     * @param whool The whool for which to fetch the URL.
+     * @return Returns the URL associated with the given whool.
      */
-    function getURL(string memory slug) public view returns (string memory) {
-        require(bytes(slug).length > 0, "Slug cannot be empty");
-        require(bytes(urls[slug]).length > 0, "Slug does not exist");
-        return urls[slug];
+    function getURL(string memory whool) public view returns (string memory) {
+        require(bytes(whool).length > 0, "Whool cannot be empty");
+        require(bytes(urls[Whool]).length > 0, "Whool does not exist");
+        return urls[Whool];
     }
 
     /**
-     * @notice Calculates the cost of a slug based on its length.
+     * @notice Calculates the cost of a whool based on its length.
      * @dev The cost is determined by a set of predefined rules.
-     * @param slugLength The length of the slug.
-     * @return Returns the cost of the slug in ether.
+     * @param whoolLength The length of the whool.
+     * @return Returns the cost of the whool in ether.
      */
-    function getSlugCost(uint256 slugLength) public view returns (uint256) {
-        if (slugLength >= PRICES.length) {
-            return PRICES[PRICES.length - 1];
-        }
-        return PRICES[slugLength];
+    function getWhoolCost(uint256 whoolLength) public view returns (uint256) {
+        return 0.000777 ether;
     }
 
     /**
      * @notice Returns a URI for a given token ID
-     * @dev Overrides ERC721's tokenURI() with metadata that includes the slug and its attributes
+     * @dev Overrides ERC721's tokenURI() with metadata that includes the whool and its attributes
      * @param tokenId The ID of the token to query
      * @return A string containing the URI of the given token ID
      */
@@ -268,16 +231,16 @@ contract Slugs is ERC721Enumerable, Ownable, Pausable {
                     abi.encodePacked(
                         "{",
                         '"name": "/',
-                        tokenIdToSlugData[tokenId].slug,
+                        tokenIdToWhoolData[tokenId].whool,
                         '",',
-                        '"description": "A unique short slug for a long URL.",',
+                        '"description": "A unique short whool for a long URL.",',
                         '"image": "data:image/svg+xml;base64,',
                         base64Svg,
                         '",',
                         '"attributes": [{"trait_type": "Custom", "value": "',
-                        (tokenIdToSlugData[tokenId].isCustom ? "Yes" : "No"),
-                        '"}, {"trait_type": "Slug Length", "display_type": "number", "value": ',
-                        Strings.toString(bytes(tokenIdToSlugData[tokenId].slug).length),
+                        (tokenIdToWhoolData[tokenId].isCustom ? "Yes" : "No"),
+                        '"}, {"trait_type": "Whool Length", "display_type": "number", "value": ',
+                        Strings.toString(bytes(tokenIdToWhoolData[tokenId].whool).length),
                         "}]",
                         "}"
                     )
@@ -289,24 +252,35 @@ contract Slugs is ERC721Enumerable, Ownable, Pausable {
     }
 
     function generateSVG(uint256 tokenId) internal view returns (bytes memory) {
-        SlugData memory data = tokenIdToSlugData[tokenId];
-        bytes memory slug = bytes(data.slug);
-
-        uint256 fontSize = (slug.length <= 12) ? 96 : (slug.length >= 48) ? 1 : 96 - (2 * slug.length);
-        uint256 color = uint256(keccak256(abi.encodePacked(tokenId))) % 361;
-
-        string memory background = string(abi.encodePacked("hsl(", Strings.toString(color), ", 90%, 90%)"));
-        string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
-
-        bytes memory text = abi.encodePacked(
-            '<text x="10%" y="40%" font-family="Helvetica" font-size="',
-            Strings.toString(fontSize),
-            '" font-weight="700" fill="',
-            foreground,
-            '">/',
-            data.slug,
-            "</text>"
-        );
+            WhoolData memory data = tokenIdToWhoolData[tokenId];
+            bytes memory whool = bytes(data.whool);
+        
+            uint256 fontSize = (whool.length <= 12) ? 96 : (whool.length >= 48) ? 1 : 96 - (2 * whool.length);
+            uint256 color = uint256(keccak256(abi.encodePacked(tokenId))) % 361;
+        
+            string memory background = string(abi.encodePacked("hsl(", Strings.toString(color), ", 90%, 90%)"));
+            string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
+        
+            bytes memory text = abi.encodePacked(
+                '<text x="10%" y="40%" font-family="Helvetica" font-size="',
+                Strings.toString(fontSize),
+                '" font-weight="700" fill="',
+                foreground,
+                '">/',
+                data.whool,
+                "</text>"
+            );
+        
+            // Add the new SVG data to the existing text and logo variables
+            bytes memory svg = abi.encodePacked(
+                '<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" xml:space="preserve"><g class="layer"><path d="M375 371a169 169 0 1 0-239-1c65 66 172 67 239 1zm-223-16h30v23c-11-6-21-14-30-23zm52 33v-33h40v42c-14-1-27-4-40-9zm62 9v-41h41l-1 33c-13 5-26 7-40 8zm62-18 1-23h30c-10 9-20 16-31 23zm33-231c17 17 29 39 36 61h-67v-85c11 6 21 14 31 24zm-53-34v95h-41l1-104c14 1 27 4 40 9zm-62-9-1 104h-40l1-96c13-5 26-7 40-8zm-93 42c9-10 20-17 31-24l-1 86-67-1c7-22 19-44 37-61zm-42 83 291 1c1 14 1 27-1 41l-291-1c-1-14-1-27 1-41zm4 63 281 1c-4 14-10 27-19 40l-243-1c-9-13-15-26-19-40z"/><path d="m375 69 18 12-21 34-19-12z"/><circle cx="389.3" cy="68" stroke="',background,'" stroke-width="4" r="31.4"/><path d="m427 116 12 18-33 23-12-18z"/><circle cx="439.4" cy="120.6" stroke="',background,'" stroke-width="4" r="31.4"/><rect height="35.7" rx="10" ry="10" stroke=""',foreground,'"" stroke-linecap="round" stroke-linejoin="round" width="21.4" x="245.1" y="408"/><rect height="138.8" rx="10" ry="10" stroke="',foreground,'" stroke-linecap="round" stroke-linejoin="round" transform="rotate(91 197 433)" width="21.4" x="186.3" y="363.9"/><rect height="35.7" rx="10" ry="10" stroke="',foreground,'" stroke-linecap="round" stroke-linejoin="round" width="21.4" x="125.6" y="422.1"/></g></svg>'
+            );
+        
+            // Concatenate the new SVG data with the existing text and logo variables
+            svg = abi.encodePacked(svg, text);
+        
+            return svg;
+        }
 
         bytes memory logo = abi.encodePacked(
             '<path d="M650 700 Q 700 750, 700 700 T 750 700" stroke="',
@@ -342,11 +316,6 @@ contract Slugs is ERC721Enumerable, Ownable, Pausable {
         IERC721 erc721Token = IERC721(token);
         require(erc721Token.ownerOf(tokenId) == address(this), "The token is not owned by the contract");
         erc721Token.safeTransferFrom(address(this), owner(), tokenId);
-    }
-
-    function modifyReferrerFee(uint256 fee) external onlyOwner {
-        require(fee <= MAX_FEE, "Fee can't be more than MAX_FEE");
-        referrerFeeBips = fee;
     }
 
     function pause() external onlyOwner {
