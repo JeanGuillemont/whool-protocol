@@ -259,7 +259,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="20%" y="55%" font-family="Roboto" font-size="28" font-weight="100" fill="',
+                '<text x="20%" y="53%" font-family="Roboto" font-size="18" font-weight="100" fill="',
                 foreground,
                 '">/',
                 data.whool,
