@@ -252,18 +252,14 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
 
     function generateSVG(uint256 tokenId) internal view returns (bytes memory) {
             WhoolData memory data = tokenIdToWhoolData[tokenId];
-            bytes memory whool = bytes(data.whool);
         
-            uint256 fontSize = (whool.length <= 12) ? 96 : (whool.length >= 48) ? 1 : 96 - (2 * whool.length);
             uint256 color = uint256(keccak256(abi.encodePacked(tokenId))) % 361;
         
             string memory background = string(abi.encodePacked("hsl(", Strings.toString(color), ", 90%, 90%)"));
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="30%" y="50%" font-family="Roboto" font-size="',
-                Strings.toString(fontSize),
-                '" font-weight="24" fill="',
+                '<text x="20%" y="55%" font-family="Roboto" font-size="28" font-weight="100" fill="',
                 foreground,
                 '">/',
                 data.whool,
@@ -271,12 +267,10 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
             );
 
             bytes memory title = abi.encodePacked(
-                '<text x="90%" y="90%" font-family="Roboto" font-size="',
-                Strings.toString(fontSize),
-                '" font-weight="8" fill="',
+                '<text x="85%" y="95%" font-family="Roboto" font-size="12" font-weight="50" fill="',
                 foreground,
-                '">/',
-                "Whool</text>"
+                '">',
+                "Whools</text>"
             );
         
             // Add the new SVG data to the existing text and logo variables
