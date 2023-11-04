@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "openzeppelin-contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "openzeppelin-contracts/token/ERC721/IERC721.sol";
-import "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-contracts/access/Ownable.sol";
-import "openzeppelin-contracts/security/Pausable.sol";
-import "openzeppelin-contracts/utils/Base64.sol";
-import "openzeppelin-contracts/utils/Strings.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import "../lib/openzeppelin-contracts/contracts/security/Pausable.sol";
+import "../lib/openzeppelin-contracts/contracts/utils/Base64.sol";
+import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /**
  * @title Whool
@@ -18,7 +19,7 @@ import "openzeppelin-contracts/utils/Strings.sol";
 
 contract Whool is ERC721Enumerable, Ownable, Pausable {
     struct WhoolData {
-        string Whool;
+        string whool;
         bool isCustom;
     }
 
@@ -52,7 +53,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
      * - `whool` must not already exist.
      *
      * Random whools are generated when whool is an empty string, and can be created at no cost.
-     * If a custom whool is provided, an ETH amount equal or greater to the mint fee needs to be provided. See getWhoolCost for more details.
+     * If a custom whool is provided, an ETH amount equal or greater to the mint fee needs to be provided.
      *
      * Emits a {NewWhool} event.
      *
@@ -198,13 +199,11 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
      */
     function getURL(string memory whool) public view returns (string memory) {
         require(bytes(whool).length > 0, "Whool cannot be empty");
-        require(bytes(urls[Whool]).length > 0, "Whool does not exist");
-        return urls[Whool];
+        require(bytes(urls[whool]).length > 0, "Whool does not exist");
+        return urls[whool];
     }
 
     /**
-     * @notice Calculates the cost of a whool based on its length.
-     * @dev The cost is determined by a set of predefined rules.
      * @param whoolLength The length of the whool.
      * @return Returns the cost of the whool in ether.
      */
@@ -233,7 +232,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
                         '"name": "/',
                         tokenIdToWhoolData[tokenId].whool,
                         '",',
-                        '"description": "A unique short whool for a long URL.",',
+                        '"description": "A long URL rolled into small whool ball.",',
                         '"image": "data:image/svg+xml;base64,',
                         base64Svg,
                         '",',
@@ -262,28 +261,36 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="10%" y="40%" font-family="Helvetica" font-size="',
+                '<text x="30%" y="50%" font-family="Roboto" font-size="',
                 Strings.toString(fontSize),
-                '" font-weight="700" fill="',
+                '" font-weight="24" fill="',
                 foreground,
                 '">/',
                 data.whool,
                 "</text>"
             );
+
+            bytes memory title = abi.encodePacked(
+                '<text x="90%" y="90%" font-family="Roboto" font-size="',
+                Strings.toString(fontSize),
+                '" font-weight="8" fill="',
+                foreground,
+                '">/',
+                "Whool</text>"
+            );
         
             // Add the new SVG data to the existing text and logo variables
             bytes memory svg = abi.encodePacked(
-                '<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" xml:space="preserve"><g class="layer"><path d="M375 371a169 169 0 1 0-239-1c65 66 172 67 239 1zm-223-16h30v23c-11-6-21-14-30-23zm52 33v-33h40v42c-14-1-27-4-40-9zm62 9v-41h41l-1 33c-13 5-26 7-40 8zm62-18 1-23h30c-10 9-20 16-31 23zm33-231c17 17 29 39 36 61h-67v-85c11 6 21 14 31 24zm-53-34v95h-41l1-104c14 1 27 4 40 9zm-62-9-1 104h-40l1-96c13-5 26-7 40-8zm-93 42c9-10 20-17 31-24l-1 86-67-1c7-22 19-44 37-61zm-42 83 291 1c1 14 1 27-1 41l-291-1c-1-14-1-27 1-41zm4 63 281 1c-4 14-10 27-19 40l-243-1c-9-13-15-26-19-40z"/><path d="m375 69 18 12-21 34-19-12z"/><circle cx="389.3" cy="68" stroke="',background,'" stroke-width="4" r="31.4"/><path d="m427 116 12 18-33 23-12-18z"/><circle cx="439.4" cy="120.6" stroke="',background,'" stroke-width="4" r="31.4"/><rect height="35.7" rx="10" ry="10" stroke=""',foreground,'"" stroke-linecap="round" stroke-linejoin="round" width="21.4" x="245.1" y="408"/><rect height="138.8" rx="10" ry="10" stroke="',foreground,'" stroke-linecap="round" stroke-linejoin="round" transform="rotate(91 197 433)" width="21.4" x="186.3" y="363.9"/><rect height="35.7" rx="10" ry="10" stroke="',foreground,'" stroke-linecap="round" stroke-linejoin="round" width="21.4" x="125.6" y="422.1"/></g></svg>'
-            );
-        
-            // Concatenate the new SVG data with the existing text and logo variables
-            svg = abi.encodePacked(svg, text);
+                '<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 312 324"><rect x="0" y="0" width="432" height="432" fill="',background,'" /><path d="M241 16c-2 0-6 3-8 5-14 13-4 35 14 35 13 0 21-8 21-20 0-10-6-19-16-21-5-1-5-1-11 1zM141 46A124 124 0 0 0 32 191c11 48 44 83 91 95l7 2H63l-2 2c-2 2-2 4-2 11 0 8 0 9 2 11 5 5 14 1 14-6v-2h40c47 1 44 2 45-9l1-5 7-1c16-2 36-9 52-19a122 122 0 0 0-79-224zm4 54v36h-29v-34l1-33 3-2 21-4h4v37zm35-34 8 2v68h-28V63h6l14 3zm38 19c14 12 26 27 33 46l2 5h-49V76l4 2 10 7zm-118 22v29H52l3-7c5-14 13-26 25-38l19-14 1 30zm157 53v20H48l-1-5v-14l1-9h208l1 8zm-4 39-7 15-5 11H64l-4-6-6-15-3-8h202v3zm-151 51-1 9c-2 0-13-8-18-13l-6-5h25v9zm41 7c0 14 0 15-2 15l-21-4-3-2v-25h26v16zm42-3v14l-7 2-13 2h-6v-31h26v13zm38-8c-5 4-19 14-21 14l-1-9v-10h27l-5 5zm2-191-3 6 6 4 7 4 3-5 3-5-3-2-6-4-4-3-3 5zm49-1a21 21 0 0 0 7 40c16 1 28-15 21-30-5-10-18-15-28-10zm-19 29-3 4 4 7 4 5 4-3 4-4-3-5-4-6c0-2-1-1-6 2z" style="fill:',foreground,'"/>',
+                text,
+                title,
+                "</svg>"            
+                );
         
             return svg;
         }
 
     ///////////// Owner methods /////////////
-
     function rescueERC20(address token) external onlyOwner {
         IERC20 erc20Token = IERC20(token);
         uint256 balance = erc20Token.balanceOf(address(this));
@@ -296,7 +303,6 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
         require(erc721Token.ownerOf(tokenId) == address(this), "The token is not owned by the contract");
         erc721Token.safeTransferFrom(address(this), owner(), tokenId);
     }
-
     function pause() external onlyOwner {
         _pause();
     }
