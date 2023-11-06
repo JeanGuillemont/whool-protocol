@@ -11,13 +11,13 @@ import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /**
  * @title Whool
- * @author bernat.eth, forked and customized by JeanGuillemont
+ * @author JeanGuillemont, forked and customized from the work of bernat.eth,
  * @notice This contract implements the Whool protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
  * Each whool is associated with a unique URL.
  * Random whools can be generated at no cost (other than gas fees), while custom whools entail a mint fee.
  */
 
-contract Whool is ERC721Enumerable, Ownable, Pausable {
+contract Whool is ERC721Enumerable, Pausable, Ownable {
     struct WhoolData {
         string whool;
         bool isCustom;
@@ -36,8 +36,8 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
 
     constructor()
         ERC721(
-            "Whool", // Name of token
-            "WHOOL" // Symbol of token
+            "Whools", // Name of token
+            "WHOOLs" // Symbol of token
         )
     {
         idCounter = 0;
@@ -86,7 +86,6 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
         _mintWhool(whool, url, isCustom);
 
         emit NewWhool(msg.sender, url, whool, idCounter, isCustom);
-
         return whool;
     }
 
@@ -177,6 +176,8 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
         tokenIdToWhoolData[idCounter] = WhoolData(whool, isCustom);
     }
 
+    
+
     ///////////// Public view methods /////////////
 
     /**
@@ -207,7 +208,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
      * @param whoolLength The length of the whool.
      * @return Returns the cost of the whool in ether.
      */
-    function getWhoolCost(uint256 whoolLength) public view returns (uint256) {
+    function getWhoolCost(uint256 whoolLength) public pure returns (uint256) {
         return 0.000777 ether;
     }
 
@@ -232,7 +233,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
                         '"name": "/',
                         tokenIdToWhoolData[tokenId].whool,
                         '",',
-                        '"description": "A long URL rolled into small whool ball.",',
+                        '"description": "A long URL rolled into a small w(h)ool ball.",',
                         '"image": "data:image/svg+xml;base64,',
                         base64Svg,
                         '",',
@@ -259,7 +260,7 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="20%" y="53%" font-family="Roboto" font-size="18" font-weight="100" fill="',
+                '<text x="18%" y="53%" font-family="Roboto" font-size="16" font-weight="100" fill="',
                 foreground,
                 '">/',
                 data.whool,
@@ -304,4 +305,5 @@ contract Whool is ERC721Enumerable, Ownable, Pausable {
     function unpause() external onlyOwner {
         _unpause();
     }
+
 }
