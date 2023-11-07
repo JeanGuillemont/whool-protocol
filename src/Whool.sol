@@ -260,7 +260,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="18%" y="53%" font-family="Roboto" font-size="16" font-weight="100" fill="',
+                '<text x="32%" y="55%" font-family="Roboto" font-size="16" font-weight="300" fill="',
                 foreground,
                 '">/',
                 data.whool,
@@ -268,7 +268,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
             );
 
             bytes memory title = abi.encodePacked(
-                '<text x="85%" y="95%" font-family="Roboto" font-size="12" font-weight="50" fill="',
+                '<text x="75%" y="90%" font-family="Roboto" font-size="24" font-weight="700" fill="',
                 foreground,
                 '">',
                 "Whools</text>"
@@ -276,7 +276,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
         
             // Add the new SVG data to the existing text and logo variables
             bytes memory svg = abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 312 324"><rect x="0" y="0" width="432" height="432" fill="',background,'" /><path d="M241 16c-2 0-6 3-8 5-14 13-4 35 14 35 13 0 21-8 21-20 0-10-6-19-16-21-5-1-5-1-11 1zM141 46A124 124 0 0 0 32 191c11 48 44 83 91 95l7 2H63l-2 2c-2 2-2 4-2 11 0 8 0 9 2 11 5 5 14 1 14-6v-2h40c47 1 44 2 45-9l1-5 7-1c16-2 36-9 52-19a122 122 0 0 0-79-224zm4 54v36h-29v-34l1-33 3-2 21-4h4v37zm35-34 8 2v68h-28V63h6l14 3zm38 19c14 12 26 27 33 46l2 5h-49V76l4 2 10 7zm-118 22v29H52l3-7c5-14 13-26 25-38l19-14 1 30zm157 53v20H48l-1-5v-14l1-9h208l1 8zm-4 39-7 15-5 11H64l-4-6-6-15-3-8h202v3zm-151 51-1 9c-2 0-13-8-18-13l-6-5h25v9zm41 7c0 14 0 15-2 15l-21-4-3-2v-25h26v16zm42-3v14l-7 2-13 2h-6v-31h26v13zm38-8c-5 4-19 14-21 14l-1-9v-10h27l-5 5zm2-191-3 6 6 4 7 4 3-5 3-5-3-2-6-4-4-3-3 5zm49-1a21 21 0 0 0 7 40c16 1 28-15 21-30-5-10-18-15-28-10zm-19 29-3 4 4 7 4 5 4-3 4-4-3-5-4-6c0-2-1-1-6 2z" style="fill:',foreground,'"/>',
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><rect x="0" y="0" width="500" height="500" fill="',background,'" /><path d="M58 190c-10 3-22 10-28 19-23 29-8 71 28 80h412v-4H308l-161-1v-3c4-8 0-18-8-22-3-1-9-1-13 1-3 1-7 6-8 10s0 9 1 12l2 2H93l3-2c5-3 13-11 16-17 13-20 9-46-8-63-6-5-11-7-18-10l-14-3-14 1Zm32 15c19 18 23 22 24 25v4l-20-20-20-19h3c3 0 4 2 13 10Zm-4 18 27 27-1 2v2l-29-28-28-29c3-2 4-2 31 26Zm-10 10 31 32-2 1-1 2-5-5-5-5-13 13-14 13h-4c-1 0 0-2 13-15l14-14-4-5-5-5-17 16-18 17-2-1-1-2 17-17 17-16-5-5-5-5-17 17-17 17-1-2-2-1 17-17 17-17-5-6-5-5-14 15-15 13v-2c-1-2 0-3 12-16l14-12-5-6-5-6 3-2 32 31Zm62 32c7 3 8 14 1 18-4 2-10 1-13-1-2-2-3-5-3-7 0-9 7-14 15-10Z" style="fill:',foreground,'"/>',
                 text,
                 title,
                 "</svg>"            
