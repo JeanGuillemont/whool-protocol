@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.21;
 
 import "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
@@ -15,21 +16,24 @@ import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
  * @notice This contract implements the Whool protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
  * Each whool is associated with a unique URL.
  * Random whools can be generated at no cost (other than gas fees), while custom whools entail a mint fee.
+ * The contract also includes functionality for referrers to earn a share of mint fees.
  */
 
-contract Whool is ERC721Enumerable, Pausable, Ownable {
+contract Whool is ERC721Royalty, ERC721Enumerable, Pausable, Ownable {
     struct WhoolData {
         string whool;
         bool isCustom;
     }
 
     uint256 public idCounter;
+    uint256 public referrerFeeBips;
     mapping(string => string) public urls;
     mapping(string => uint256) public whoolToTokenId;
     mapping(uint256 => WhoolData) public tokenIdToWhoolData;
     mapping(address => uint256) public balances;
+    
 
-    event NewWhool(address indexed sender, string url, string whool, uint256 tokenId, bool isCustom);
+    event NewWhool(address indexed sender, string url, string whool, uint256 tokenId, bool isCustom, address referrer);
 
     bytes constant CHARSET = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // 58 chars
     uint256 constant MAX_FEE = 10000;
@@ -41,16 +45,20 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
         )
     {
         idCounter = 0;
+        _setDefaultRoyalty(owner(), 100);
+        referrerFeeBips = 30 * 100; // 30%
     }
 
     ///////////// Transactional methods /////////////
 
     /**
      * @notice Mint a new whool.
+     * @dev Referrer is required but can be the zero address.
      *
      * Requirements:
      * - `url` cannot be empty.
      * - `whool` must not already exist.
+     * - `referrer` cannot be the sender.
      *
      * Random whools are generated when whool is an empty string, and can be created at no cost.
      * If a custom whool is provided, an ETH amount equal or greater to the mint fee needs to be provided.
@@ -60,8 +68,9 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
      * @param url The URL associated with the new whool.
      * @param whool The custom whool to be created. If empty, a random whool is generated.
      * @return Returns the whool that was created.
+     * @param referrer The address of the referrer. Can be the zero address.
      */
-    function mintWhool(string memory url, string memory whool)
+    function mintWhool(string memory url, string memory whool, address referrer)
         public
         payable
         whenNotPaused
@@ -69,6 +78,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
     {
         require(bytes(url).length > 0, "URL cannot be empty");
         require(bytes(urls[whool]).length == 0, "whool already exists");
+        require(msg.sender != referrer, "Referrer cannot be sender");
 
         bool isCustom;
 
@@ -79,13 +89,13 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
         // Custom whool
         } else {
             isCustom = true;
-            handleCustomWhoolPayment(whool);
+            handleCustomWhoolPayment(whool, referrer);
         }
 
         // Register whool -> url mapping
         _mintWhool(whool, url, isCustom);
 
-        emit NewWhool(msg.sender, url, whool, idCounter, isCustom);
+        emit NewWhool(msg.sender, url, whool, idCounter, isCustom, referrer);
         return whool;
     }
 
@@ -105,6 +115,25 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
 
         string memory whool = tokenIdToWhoolData[tokenId].whool;
         urls[whool] = newUrl;
+    }
+
+        /**
+     * @dev Claims the ETH balance associated with the caller's address.
+     *
+     * Requirements:
+     * - The caller must have a non-zero balance.
+     *
+     * Emits a {Transfer} event.
+     */
+    function claimBalance() public {
+        uint256 balance = balances[msg.sender];
+        require(balance > 0, "No balance to claim");
+        balances[msg.sender] = 0;
+        payable(msg.sender).transfer(balance);
+    }
+
+    receive() external payable {
+        balances[owner()] += msg.value;
     }
 
     ///////////// Private methods /////////////
@@ -156,7 +185,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
         return char;
     }
 
-    function handleCustomWhoolPayment(string memory whool) private {
+    function handleCustomWhoolPayment(string memory whool, address referrer) private {
         uint256 whoolLength = bytes(whool).length;
         uint256 cost = getWhoolCost(whoolLength);
         require(msg.value >= cost, "Insufficient payment");
@@ -165,7 +194,13 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
             payable(msg.sender).transfer(msg.value - cost);
         }
 
-        balances[owner()] += cost;
+        if (referrer == address(0)) {
+            referrer = owner();
+        }
+
+        uint256 referrerFees = cost * referrerFeeBips / MAX_FEE;
+        balances[referrer] += referrerFees;
+        balances[owner()] += cost - referrerFees;
     }
 
     function _mintWhool(string memory whool, string memory url, bool isCustom) private {
@@ -209,7 +244,7 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
      * @return Returns the cost of the whool in ether.
      */
     function getWhoolCost(uint256 whoolLength) public pure returns (uint256) {
-        return 0.000777 ether;
+        return 0.001 ether;
     }
 
     /**
@@ -253,14 +288,16 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
 
     function generateSVG(uint256 tokenId) internal view returns (bytes memory) {
             WhoolData memory data = tokenIdToWhoolData[tokenId];
-        
+            bytes memory whool = bytes(data.whool);
+
+            uint256 fontSize = (whool.length <= 12) ? 24 : (whool.length >= 36) ? 8 : 16;
             uint256 color = uint256(keccak256(abi.encodePacked(tokenId))) % 361;
         
             string memory background = string(abi.encodePacked("hsl(", Strings.toString(color), ", 90%, 90%)"));
             string memory foreground = string(abi.encodePacked("hsl(", Strings.toString(color), ", 50%, 40%)"));
         
             bytes memory text = abi.encodePacked(
-                '<text x="32%" y="55%" font-family="Roboto" font-size="16" font-weight="300" fill="',
+                '<text x="32%" y="56%" font-family="Roboto" font-size="16" font-weight="300" fill="',
                 foreground,
                 '">/',
                 data.whool,
@@ -305,5 +342,36 @@ contract Whool is ERC721Enumerable, Pausable, Ownable {
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    // Override functions
+
+    function supportsInterface(bytes4 interfaceId)
+    public view virtual override(ERC721Enumerable, ERC721Royalty)
+    returns (bool) {
+      return super.supportsInterface(interfaceId);
+  }
+
+    function _burn(uint256 tokenId) internal virtual override (ERC721, ERC721Royalty) {
+        super._burn(tokenId);
+        _resetTokenRoyalty(tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual override (ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+
+        require(!paused(), "ERC721Pausable: token transfer while paused");
+        if (batchSize > 1) {
+            // Will only trigger during construction. Batch transferring (minting) is not available afterwards.
+            revert("ERC721Enumerable: consecutive transfers not supported");
+        }
+
+    }
+    
+
 
 }
