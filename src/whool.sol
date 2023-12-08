@@ -11,9 +11,9 @@ import "../lib/openzeppelin-contracts/contracts/utils/Base64.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /**
- * @title Whool
+ * @title whool
  * @author JeanGuillemont, forked and customized from the work of bernat.eth,
- * @notice This contract implements the Whool protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
+ * @notice This contract implements the whool protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
  * Each whool is associated with a unique URL.
  * Random whools can be generated at no cost (other than gas fees), while custom whools entail a mint fee.
  * The contract also includes functionality for referrers to earn a share of mint fees.
