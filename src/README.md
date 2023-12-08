@@ -1,13 +1,13 @@
 # Whool 
 **Inherits:**
-ERC721Enumerable, Ownable, Pausable
+ERC721Enumerable, Ownable, Pausable, ERC721Royalty
 
 **Author:**
-bernat.eth, forked and customized by JeanGuillemont
+JeanGuillemont, forked and customized from slugs by bernat.eth
 
-This contract implements the Slugs protocol, which allows for the creation and management of unique slug NFTs that map to URLs.
-Each slug is associated with a unique URL.
-Random slugs can be generated at no cost (other than gas fees), while custom slugs entail a mint fee.
+This contract implements the Whools protocol, which allows for the creation and management of unique whool NFTs that map to URLs.
+Each whool is associated with a unique URL.
+Random whools can be generated at no cost (other than gas fees), while custom whools entail a mint fee.
 The contract also includes functionality for referrers to earn a share of mint fees.
 
 
@@ -33,17 +33,17 @@ mapping(string => string) public urls;
 ```
 
 
-### slugToTokenId
+### whoolToTokenId
 
 ```solidity
-mapping(string => uint256) public slugToTokenId;
+mapping(string => uint256) public whoolToTokenId;
 ```
 
 
-### tokenIdToSlugData
+### tokenIdToWhoolData
 
 ```solidity
-mapping(uint256 => SlugData) public tokenIdToSlugData;
+mapping(uint256 => WhoolData) public tokenIdToWhoolData;
 ```
 
 
@@ -73,25 +73,25 @@ uint256 constant MAX_FEE = 10000;
 
 
 ```solidity
-constructor() ERC721("Slugs", "SLUGS");
+constructor() ERC721("Whools", "WHOOLS");
 ```
 
-### mintSlug
+### mintWhool
 
-Mint a new slug.
+Mint a new whool.
 
 *Referrer is required but can be the zero address.
 Requirements:
 - `url` cannot be empty.
-- `slug` must not already exist.
+- `whool` must not already exist.
 - `referrer` cannot be the sender.
-Random slugs are generated when slug is an empty string, and can be created at no cost.
-If a custom slug is provided, an ETH amount equal or greater to the mint fee needs to be provided. See getSlugCost for more details.
-Emits a {NewSlug} event.*
+Random whools are generated when whool is an empty string, and can be created at no cost.
+If a custom whool is provided, an ETH amount equal or greater to the mint fee needs to be provided. See getWhoolCost for more details.
+Emits a {NewWhool} event.*
 
 
 ```solidity
-function mintSlug(string memory url, string memory slug, address referrer)
+function mintWhool(string memory url, string memory whool, address referrer)
     public
     payable
     whenNotPaused
@@ -101,20 +101,20 @@ function mintSlug(string memory url, string memory slug, address referrer)
 
 |Name|Type|Description|
 |----|----|-----------|
-|`url`|`string`|The URL associated with the new slug.|
-|`slug`|`string`|The custom slug to be created. If empty, a random slug is generated.|
+|`url`|`string`|The URL associated with the new whool.|
+|`whool`|`string`|The custom whool to be created. If empty, a random whool is generated.|
 |`referrer`|`address`|The address of the referrer. Can be the zero address.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`string`|Returns the slug that was created.|
+|`<none>`|`string`|Returns the whool that was created.|
 
 
 ### editUrl
 
-*Edits the URL of a slug.
+*Edits the URL of a whool.
 Requirements:
 - `tokenId` must be owned by the caller.
 - `newUrl` cannot be empty.*
@@ -127,8 +127,8 @@ function editUrl(uint256 tokenId, string memory newUrl) public;
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokenId`|`uint256`|The ID of the token (slug) to edit.|
-|`newUrl`|`string`|The new URL to associate with the slug.|
+|`tokenId`|`uint256`|The ID of the token (whool) to edit.|
+|`newUrl`|`string`|The new URL to associate with the whool.|
 
 
 ### claimBalance
@@ -150,122 +150,122 @@ function claimBalance() public;
 receive() external payable;
 ```
 
-### generateAvailableSlug
+### generateAvailableWhool
 
 
 ```solidity
-function generateAvailableSlug() private view returns (string memory);
+function generateAvailableWhool() private view returns (string memory);
 ```
 
-### generateSlug
+### generateWhool
 
 
 ```solidity
-function generateSlug(uint256 seed) private pure returns (string memory);
+function generateWhool(uint256 seed) private pure returns (string memory);
 ```
 
-### incrementSlug
+### incrementWhool
 
 
 ```solidity
-function incrementSlug(string memory slug) private pure returns (string memory);
+function incrementWhool(string memory Whool) private pure returns (string memory);
 ```
 
-### isValidSlug
+### isValidWhool
 
 
 ```solidity
-function isValidSlug(string memory slug) private pure returns (bool);
+function isValidWhool(string memory whool) private pure returns (bool);
 ```
 
-### handleCustomSlugPayment
+### handleCustomWhoolPayment
 
 
 ```solidity
-function handleCustomSlugPayment(string memory slug, address referrer) private;
+function handleCustomWhoolPayment(string memory whool, address referrer) private;
 ```
 
-### _mintSlug
+### _mintWhool
 
 
 ```solidity
-function _mintSlug(string memory slug, string memory url, bool isCustom) private;
+function _mintWhool(string memory whool, string memory url, bool isCustom) private;
 ```
 
 ### getTokenId
 
-Fetches the token ID associated with a given slug.
+Fetches the token ID associated with a given whool.
 
-*This function requires that the slug is not empty and exists.*
+*This function requires that the whool is not empty and exists.*
 
 
 ```solidity
-function getTokenId(string memory slug) public view returns (uint256);
+function getTokenId(string memory whool) public view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`slug`|`string`|The slug for which to fetch the token ID.|
+|`whool`|`string`|The whool for which to fetch the token ID.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|Returns the token ID associated with the given slug.|
+|`<none>`|`uint256`|Returns the token ID associated with the given whool.|
 
 
 ### getURL
 
-Fetches the URL associated with a given slug.
+Fetches the URL associated with a given whool.
 
-*This function requires that the slug is not empty and exists.*
+*This function requires that the whool is not empty and exists.*
 
 
 ```solidity
-function getURL(string memory slug) public view returns (string memory);
+function getURL(string memory whool) public view returns (string memory);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`slug`|`string`|The slug for which to fetch the URL.|
+|`whool`|`string`|The whool for which to fetch the URL.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`string`|Returns the URL associated with the given slug.|
+|`<none>`|`string`|Returns the URL associated with the given whool.|
 
 
-### getSlugCost
+### getWhoolCost
 
-Calculates the cost of a slug based on its length.
+Get the standard whool cost for custom whools.
 
-*The cost is determined by a set of predefined rules.*
+*The cost is set at 0.001eth*
 
 
 ```solidity
-function getSlugCost(uint256 slugLength) public pure returns (uint256);
+function getWhoolCost(uint256 whoolLength) public pure returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`slugLength`|`uint256`|The length of the slug.|
+|`whoolLength`|`uint256`|The length of the whool.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`uint256`|Returns the cost of the slug in ether.|
+|`<none>`|`uint256`|Returns the cost of the swhool in ether.|
 
 
 ### tokenURI
 
 Returns a URI for a given token ID
 
-*Overrides ERC721's tokenURI() with metadata that includes the slug and its attributes*
+*Overrides ERC721's tokenURI() with metadata that includes the whool and its attributes*
 
 
 ```solidity
@@ -327,18 +327,18 @@ function unpause() external onlyOwner;
 ```
 
 ## Events
-### NewSlug
+### NewWhool
 
 ```solidity
-event NewSlug(address indexed sender, string url, string slug, uint256 tokenId, bool isCustom, address referrer);
+event NewWhool(address indexed sender, string url, string whool, uint256 tokenId, bool isCustom, address referrer);
 ```
 
 ## Structs
-### SlugData
+### WhoolData
 
 ```solidity
-struct SlugData {
-    string slug;
+struct WhoolData {
+    string whool;
     bool isCustom;
 }
 ```
