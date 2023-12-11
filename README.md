@@ -16,6 +16,7 @@ Any individual or project participating the growth of the protocol either by spr
 ### Genesis
 The whool protocol is born from a multiple sided statement : 
 - The awesome idea of bernatfp is an incredible opportunity to give to users part of the ownership of traffic they create instead of web2 actors
+- The risk of hack and scams induced by short urls by hidding destination under a potentially and unmonitored false name, even more in web3 environment
 - The difficulty for artists to make their work known outside their community, a growing factor due to the ongoing fragmentation of twitter community 
 - The current low affordability of web3 customization tools which lower the positive effect on decentralization this customization would bring
 
