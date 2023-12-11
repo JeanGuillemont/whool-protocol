@@ -28,7 +28,7 @@ Whools are ERC721 NFT granting the owner to set the url corresponding to it. A w
 - *Custom*, in this case creator can choose the string used (if not already existing) and will require a static 0.001eth fee to be minted. A custom whool allow the owner to be referrer in 90% of case.
 
 They are :
-- *Affordable* : a custom whool can be minted at the fixed price of 0.001eth (a bit more than 2$ at time of writing)
+- *Affordable* : a custom whool can be minted at the fixed price of 0.001eth (a bit more than $2 at time of writing)
 - *Perpetual* : custom or random whools are not rented by the user, once minted user owns his whool fully, forever
 - *Transferrable* : the owner of a whool can gift it, transfer it and sell it 
 - *1% royalty* : given whool affordability, permanent ownership, a 1% royalty fee on second sales seemed to be fair in case of speculation
