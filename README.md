@@ -35,5 +35,4 @@ They are :
 
 ### License
 
-MIT License.
-**
+MIT License
