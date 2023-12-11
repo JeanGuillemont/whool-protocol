@@ -9,7 +9,7 @@ The whool protocol is the onchain url shortener with NFT art on top. It aims to 
 ### Description
 The whool protocol is an onchain and NFT powered url shortener allowing the creation and the management of whools. A whool is a string alias NFT mapping to an url selected by its owner. The protocol can be integrated in any frontend supporting the registration, management and/or resolution of whool requests for redirection. However, it's first use is through the [whool_application](https://whool.art/) reprensenting the main use case (at the time of writing) of the protocol. Feel free to innovate on it.
 
-The protocol and its app aims to improve the accessibility of customized short urls and improve the visibility of artists by randomly promoting newly minted NFTs on platforms. In return, the protocol owner or the whool owner get referral fee on mints made from the link splash screen.
+The protocol and its application aim to improve the accessibility of customized short urls and improve the visibility of artists by randomly promoting newly minted NFTs on platforms. In return, the protocol owner or the whool owner get referral fee on mints made from the link splash screen.
 
 Any individual or project participating the growth of the protocol either by spreading the word or by creating an application where users create whools, will earn 30% referral fees on any custom whool minted.
 
