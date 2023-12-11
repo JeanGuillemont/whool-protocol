@@ -33,6 +33,19 @@ They are :
 - *Transferrable* : the owner of a whool can gift it, transfer it and sell it 
 - *1% royalty* : given whool affordability, permanent ownership, a 1% royalty fee on second sales seemed to be fair in case of speculation
 
+### Developers
+Dive into the /src directory for comprehensive contract documentation and source code.
+
+Deployments
+Optimism Goerli: 0xCCD1f91f4cD7c52f091b68dCC66D9028eF0D4008
+Optimism Sepolia : 
+Optimism Mainnet: 
+
+### Disclaimer
+- This contract is unaudited and could have bugs
+- There is no URL validation at the contract level
+- Safe URL redirection requires honest frontends to cooperate (outside whool application)
+
 ### License
 
 MIT License
