@@ -19,7 +19,7 @@ import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
  * The contract also includes functionality for referrers to earn a share of mint fees.
  */
 
-contract whool is ERC721Royalty, ERC721Enumerable, Pausable, Ownable {
+contract Whool is ERC721Royalty, ERC721Enumerable, Pausable, Ownable {
     struct WhoolData {
         string whool;
         bool isCustom;
