@@ -40,7 +40,7 @@ Dive into the /src directory for comprehensive contract documentation and source
 Deployments
 Optimism Goerli: 0xCCD1f91f4cD7c52f091b68dCC66D9028eF0D4008
 Optimism Sepolia : 
-Optimism Mainnet: 
+Optimism Mainnet: 0x7ed718678b22e65f803a5dc2b0107bb99c20a76d
 
 ### Disclaimer
 - This contract is unaudited and could have bugs
