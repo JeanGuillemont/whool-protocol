@@ -4,7 +4,7 @@
 This is a fork of the [slugs-protocol](https://github.com/bernatfp/slugs-protocol) of bernatfp
 
 ### Summary
-The whool protocol is the onchain url shortener with NFT art on top. It aims to make short url rewarding for their creator, funnier and safer for the visitors by integrating a splash screen before link redirection.
+The whool protocol is an onchain url shortener with NFT art on top. It aims to make short url rewarding for their creator, funnier and safer for the visitors by integrating a splash screen before link redirection.
 
 ### Description
 The whool protocol is an onchain and NFT powered url shortener allowing the creation and the management of whools. A whool is a string alias NFT mapping to an url selected by its owner. The protocol can be integrated in any frontend supporting the registration, management and/or resolution of whool requests for redirection. However, it's first use is through the [whool_application](https://whool.art/) reprensenting the main use case (at the time of writing) of the protocol. Feel free to innovate on it.
